@@ -36,7 +36,7 @@ module NationalRailEnquiries
       @agent.user_agent_alias = "Mac FireFox"
     end
 
-    def plan(options = {})
+    def plan(options = {}, &block)
       departure_time = nil
       @agent.get("http://www.nationalrail.co.uk/") do |home_page|
         times_page = home_page.form_with(:action => "http://ojp.nationalrail.co.uk/en/s/planjourney/plan") do |form|
@@ -78,84 +78,64 @@ module NationalRailEnquiries
           end
 
           departure_time = TimeParser.new(date).time((tr/"td.leaving").inner_text.strip)
-          departure_time_formatted = departure_time.localtime.strftime("%Y-%m-%d %H:%M")
-          unless departure_time > options[:time]
-            puts "#{departure_time_formatted} departure skipped because departure time is earlier than the search time"
-            next
-          end
-
-          unless departure_time.to_date == options[:time].to_date
-            puts "#{departure_time_formatted} departure and all subsequent departures skipped because departure time is not on the same day"
-            return nil
-          end
-
           number_of_changes = (tr/"td:nth-child(6)").inner_text.strip
-          unless number_of_changes == "0"
-            puts "#{departure_time_formatted} departure skipped because it has #{number_of_changes} changes"
-            next
-          end
+
+          next if options[:skip_summary] && options[:skip_summary].call(departure_time, number_of_changes)
+          break if options[:abort_summary] && options[:abort_summary].call(departure_time)
 
           anchor = (tr/"a[@id^=journeyOption]").first
           link = times_page.links.detect { |l| l.attributes["id"] == anchor["id"] }
           @agent.transact do
             sleep(2 + 4 * (rand - 0.5))
-            details_page = link.click
-
-            description = (details_page.doc/"table#journeyLegDetails tbody tr.lastRow td[@colspan=6] div").first.inner_text.gsub(/\s+/, " ").strip
-            origins, destinations = (/from (.*) to (.*)/.match(description)[1,2]).map{ |s| s.split(",").map(&:strip) }
-
-            unless origins.include?(options[:from]) && destinations.include?(options[:to])
-              puts "#{departure_time_formatted} departure skipped because expected origin (#{options[:from]}) and destination (#{options[:to]}) are not in origins(#{origins.join(",")}) and destinations (#{destinations.join(",")})"
-              next
-            end
-
-            parser = TimeParser.new(date)
-
-            events = []
-            origin_code = (details_page.doc/"td.origin abbr").inner_html.strip
-            departs_at = (details_page.doc/"td.leaving").inner_html.strip
-            events << {
-              :type => Event::OriginDeparture,
-              :station_code => origin_code,
-              :timetabled_at => parser.time(departs_at)
-            }
-
-            (details_page.doc/".callingpoints table > tbody > tr").each do |tr|
-              if (tr/".calling-points").length > 0
-                station_code = (tr/".calling-points > a > abbr").inner_html.strip
-                arrives_at = (tr/".arrives").inner_html.strip
-                departs_at = (tr/".departs").inner_html.strip
-                departs_at = arrives_at if arrives_at.present? && departs_at.blank?
-                arrives_at = departs_at if arrives_at.blank? && departs_at.present?
-                events << {
-                  :type => Event::Arrival,
-                  :station_code => station_code,
-                  :timetabled_at => parser.time(arrives_at)
-                }
-                events << {
-                  :type => Event::Departure,
-                  :station_code => station_code,
-                  :timetabled_at => parser.time(departs_at)
-                }
-              end
-            end
-
-            destination_code = (details_page.doc/"td.destination abbr").inner_html.strip
-            arrives_at = (details_page.doc/"td.arriving").inner_html.strip
-            events << {
-              :type => Event::DestinationArrival,
-              :station_code => destination_code,
-              :timetabled_at => parser.time(arrives_at)
-            }
-
-            yield(events)
+            parse_details(link.click, date, &block)
           end
         end
       end
-      return departure_time
     rescue => e
       File.open("error.html", "w") { |f| f.write(@agent.current_page.parser.to_html) }
       raise e
     end
+
+    def parse_details(page, date, &block)
+      description = (page.doc/"table#journeyLegDetails tbody tr.lastRow td[@colspan=6] div").first.inner_text.gsub(/\s+/, " ").strip
+      origins, destinations = (/from (.*) to (.*)/.match(description)[1,2]).map{ |s| s.split(",").map(&:strip) }
+      parser = TimeParser.new(date)
+
+      stops = []
+      origin_code = (page.doc/"td.origin abbr").inner_html.strip
+      departs_at = (page.doc/"td.leaving").inner_html.strip
+      stops << {
+        :station_code => origin_code,
+        :departs_at => parser.time(departs_at)
+      }
+
+      (page.doc/".callingpoints table > tbody > tr").each do |tr|
+        if (tr/".calling-points").length > 0
+          station_code = (tr/".calling-points > a > abbr").inner_html.strip
+          arrives_at = (tr/".arrives").inner_html.strip
+          departs_at = (tr/".departs").inner_html.strip
+          departs_at = arrives_at if arrives_at.present? && departs_at.blank?
+          arrives_at = departs_at if arrives_at.blank? && departs_at.present?
+          stops << {
+            :station_code => station_code,
+            :arrives_at => parser.time(arrives_at),
+            :departs_at => parser.time(departs_at)
+          }
+        end
+      end
+
+      destination_code = (page.doc/"td.destination abbr").inner_html.strip
+      arrives_at = (page.doc/"td.arriving").inner_html.strip
+      stops << {
+        :station_code => destination_code,
+        :arrives_at => parser.time(arrives_at)
+      }
+
+      block.call(origins, destinations, stops)
+    rescue => e
+      File.open("details-error.html", "w") { |f| f.write(page.parser.to_html) }
+      raise e
+    end
+
   end
 end
