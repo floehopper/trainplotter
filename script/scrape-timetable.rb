@@ -23,62 +23,48 @@ origins_vs_destinations = {
 origins_vs_destinations.each do |origins, destinations|
   origins.each do |origin|
     destinations.each do |destination|
-      planner = NationalRailEnquiries::JourneyPlanner.new
       puts "#{origin}-#{destination}"
       time = 1.day.from_now.localtime.beginning_of_day
 
-      aborted = false
-      while !aborted
+      finished = false
+      while !finished
+        planner = NationalRailEnquiries::JourneyPlanner.new
         puts "Searching for journeys after #{time.strftime("%Y-%m-%d %H:%M")}"
 
-        skip_summary = lambda { |departure_time, number_of_changes|
-          departure_time_formatted = departure_time.localtime.strftime("%Y-%m-%d %H:%M")
-          unless departure_time > time
-            puts "#{departure_time_formatted} departure skipped because departure time is earlier than the search time"
-            return true
-          end
-          unless number_of_changes == "0"
-            puts "#{departure_time_formatted} departure skipped because it has #{number_of_changes} changes"
-            return true
-          end
-          return false
-        }
+        summary_rows = planner.plan(:from => origin, :to => destination, :time => time)
+        summary_rows.each do |summary_row|
+          departure_time_formatted = summary_row.departure_time.localtime.strftime("%Y-%m-%d %H:%M")
+          print departure_time_formatted
 
-        abort_summary = lambda { |departure_time|
-          departure_time_formatted = departure_time.localtime.strftime("%Y-%m-%d %H:%M")
-          unless departure_time.to_date == time.to_date
-            puts "#{departure_time_formatted} departure and all subsequent departures skipped because departure time is not on the same day"
-            aborted = true
-            return true
+          unless summary_row.departure_time > time
+            puts " - skipped because departure time is earlier than the search time"
+            next
           end
-          return false
-        }
-
-        aborted = false
-        departure_time = time
-        planner.plan(
-          :from => origin,
-          :to => destination,
-          :time => time,
-          :skip_summary => skip_summary,
-          :abort_summary => abort_summary
-        ) do |origins, destinations, stops|
-          stop = stops.shift
-          departure_time = stop[:departs_at]
-          departure_time_formatted = departure_time.localtime.strftime("%Y-%m-%d %H:%M")
-          unless origins.include?(origin) && destinations.include?(destination)
-            puts "#{departure_time_formatted} departure skipped because expected origin (#{origin}) and destination (#{destination}) are not in origins (#{origins.join(",")}) and destinations (#{destinations.join(",")})"
+          unless summary_row.departure_time.to_date == time.to_date
+            puts " - aborting because departure time is not on the same day"
+            finished = true
             break
           end
-          puts "#{departure_time_formatted} *** departure with #{stops.length} stops found"
-          journey = Journey.new(:departing_at => stop[:departs_at])
+          unless summary_row.number_of_changes == "0"
+            puts " - skipped because it has #{summary_row.number_of_changes} changes"
+            next
+          end
+
+          details = summary_row.details
+          unless details[:origins].include?(origin) && details[:destinations].include?(destination)
+            puts " - skipped because origin & destination are not in origins (#{details[:origins].join(",")}) & destinations (#{details[:destinations].join(",")})"
+            next
+          end
+          puts " - departure with #{details[:stops].length} stops found"
+
+          initial_stop = details[:initial_stop]
+          journey = Journey.new(:departing_at => initial_stop[:departs_at])
           journey.events << Event::OriginDeparture.new(
             :journey => journey,
-            :station => Station.find_by_code(stop[:station_code]),
-            :timetabled_at => stop[:departs_at]
+            :station => Station.find_by_code(initial_stop[:station_code]),
+            :timetabled_at => initial_stop[:departs_at]
           )
-          while stops.length > 1 do
-            stop = stops.shift
+          details[:stops].each do |stop|
             journey.events << Event::Arrival.new(
               :journey => journey,
               :station => Station.find_by_code(stop[:station_code]),
@@ -90,17 +76,22 @@ origins_vs_destinations.each do |origins, destinations|
               :timetabled_at => stop[:departs_at]
             )
           end
-          stop = stops.shift
+          final_stop = details[:final_stop]
           journey.events << Event::DestinationArrival.new(
             :journey => journey,
-            :station => Station.find_by_code(stop[:station_code]),
-            :timetabled_at => stop[:arrives_at]
+            :station => Station.find_by_code(final_stop[:station_code]),
+            :timetabled_at => final_stop[:arrives_at]
           )
           unless journey.save
             puts "#{departure_time_formatted} departure skipped because it is not valid: #{journey.errors.full_messages}"
           end
         end
-        time = departure_time.localtime + 1.minute
+
+        if summary_rows.empty?
+          time += 1.minute
+        else
+          time = summary_rows.last.departure_time.localtime + 1.minute
+        end
       end
     end
   end

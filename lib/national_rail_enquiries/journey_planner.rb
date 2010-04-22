@@ -29,15 +29,72 @@ module NationalRailEnquiries
       end
     end
 
+    class SummaryRow
+
+      attr_reader :departure_time, :number_of_changes
+
+      def initialize(agent, date, departure_time, number_of_changes, link)
+        @agent, @date = agent, date
+        @departure_time, @number_of_changes, @link = departure_time, number_of_changes, link
+      end
+
+      def details
+        @agent.transact do
+          parse_details(@link.click, @date)
+        end
+      end
+
+      def parse_details(page, date)
+        details = {}
+        description = (page.doc/"table#journeyLegDetails tbody tr.lastRow td[@colspan=6] div").first.inner_text.gsub(/\s+/, " ").strip
+        origins, destinations = (/from (.*) to (.*)/.match(description)[1,2]).map{ |s| s.split(",").map(&:strip) }
+        details[:origins], details[:destinations] = origins, destinations
+        parser = TimeParser.new(date)
+
+        origin_code = (page.doc/"td.origin abbr").inner_html.strip
+        departs_at = (page.doc/"td.leaving").inner_html.strip
+        details[:initial_stop] = {
+          :station_code => origin_code,
+          :departs_at => parser.time(departs_at)
+        }
+
+        details[:stops] = []
+        (page.doc/".callingpoints table > tbody > tr").each do |tr|
+          if (tr/".calling-points").length > 0
+            station_code = (tr/".calling-points > a > abbr").inner_html.strip
+            arrives_at = (tr/".arrives").inner_html.strip
+            departs_at = (tr/".departs").inner_html.strip
+            departs_at = arrives_at if arrives_at.present? && departs_at.blank?
+            arrives_at = departs_at if arrives_at.blank? && departs_at.present?
+            details[:stops] << {
+              :station_code => station_code,
+              :arrives_at => parser.time(arrives_at),
+              :departs_at => parser.time(departs_at)
+            }
+          end
+        end
+
+        destination_code = (page.doc/"td.destination abbr").inner_html.strip
+        arrives_at = (page.doc/"td.arriving").inner_html.strip
+        details[:final_stop] = {
+          :station_code => destination_code,
+          :arrives_at => parser.time(arrives_at)
+        }
+        details
+      rescue => e
+        File.open("details-error.html", "w") { |f| f.write(page.parser.to_html) }
+        raise e
+      end
+    end
+
     def initialize
       @agent = WWW::Mechanize.new
-      puts "*** New Session ***"
       @agent.pluggable_parser.html = HpricotParser
       @agent.user_agent_alias = "Mac FireFox"
     end
 
-    def plan(options = {}, &block)
-      departure_time = nil
+    def plan(options = {})
+      summary_rows = []
       @agent.get("http://www.nationalrail.co.uk/") do |home_page|
         times_page = home_page.form_with(:action => "http://ojp.nationalrail.co.uk/en/s/planjourney/plan") do |form|
           form["jpState"] = "single"
@@ -79,63 +136,16 @@ module NationalRailEnquiries
 
           departure_time = TimeParser.new(date).time((tr/"td.leaving").inner_text.strip)
           number_of_changes = (tr/"td:nth-child(6)").inner_text.strip
-
-          next if options[:skip_summary] && options[:skip_summary].call(departure_time, number_of_changes)
-          break if options[:abort_summary] && options[:abort_summary].call(departure_time)
-
           anchor = (tr/"a[@id^=journeyOption]").first
           link = times_page.links.detect { |l| l.attributes["id"] == anchor["id"] }
-          @agent.transact do
-            sleep(2 + 4 * (rand - 0.5))
-            parse_details(link.click, date, &block)
-          end
+
+          summary_rows << SummaryRow.new(@agent, date, departure_time, number_of_changes, link)
         end
       end
+      summary_rows
     rescue => e
       File.open("error.html", "w") { |f| f.write(@agent.current_page.parser.to_html) }
       raise e
     end
-
-    def parse_details(page, date, &block)
-      description = (page.doc/"table#journeyLegDetails tbody tr.lastRow td[@colspan=6] div").first.inner_text.gsub(/\s+/, " ").strip
-      origins, destinations = (/from (.*) to (.*)/.match(description)[1,2]).map{ |s| s.split(",").map(&:strip) }
-      parser = TimeParser.new(date)
-
-      stops = []
-      origin_code = (page.doc/"td.origin abbr").inner_html.strip
-      departs_at = (page.doc/"td.leaving").inner_html.strip
-      stops << {
-        :station_code => origin_code,
-        :departs_at => parser.time(departs_at)
-      }
-
-      (page.doc/".callingpoints table > tbody > tr").each do |tr|
-        if (tr/".calling-points").length > 0
-          station_code = (tr/".calling-points > a > abbr").inner_html.strip
-          arrives_at = (tr/".arrives").inner_html.strip
-          departs_at = (tr/".departs").inner_html.strip
-          departs_at = arrives_at if arrives_at.present? && departs_at.blank?
-          arrives_at = departs_at if arrives_at.blank? && departs_at.present?
-          stops << {
-            :station_code => station_code,
-            :arrives_at => parser.time(arrives_at),
-            :departs_at => parser.time(departs_at)
-          }
-        end
-      end
-
-      destination_code = (page.doc/"td.destination abbr").inner_html.strip
-      arrives_at = (page.doc/"td.arriving").inner_html.strip
-      stops << {
-        :station_code => destination_code,
-        :arrives_at => parser.time(arrives_at)
-      }
-
-      block.call(origins, destinations, stops)
-    rescue => e
-      File.open("details-error.html", "w") { |f| f.write(page.parser.to_html) }
-      raise e
-    end
-
   end
 end
