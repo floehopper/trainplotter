@@ -3,6 +3,8 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "config", "environment"))
 
 origins_vs_destinations = {
+
+  # East Coast Trains
   ["York"] => ["Newcastle"],
   ["Newcastle"] => ["Glasgow Central"],
   ["Doncaster"] => ["Glasgow Central"],
@@ -13,6 +15,7 @@ origins_vs_destinations = {
   ["Aberdeen"] => ["Edinburgh"],
   ["Glasgow Central"] => ["York"],
 
+  # Southeast Trains - High Speed
   ["London St Pancras (Domestic)"] => ["Rochester", "Margate", "Faversham", "Dover Priory", "Ebbsfleet International", "Ramsgate", "Ashford International"],
   ["Ashford International", "Faversham", "Ramsgate", "Dover Priory", "Margate", "Ebbsfleet International", "Rochester"] => ["London St Pancras (Domestic)"]
 }

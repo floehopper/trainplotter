@@ -13,6 +13,22 @@ module NationalRailEnquiries
       end
     end
 
+    class TimeParser
+      def initialize(date)
+        @date = date
+        @last_time = nil
+      end
+      def time(hours_and_minutes)
+        time = Time.parse("#{hours_and_minutes} #{@date}").in_time_zone
+        if @last_time && (time < @last_time)
+          @date += 1
+          time = Time.parse("#{hours_and_minutes} #{@date}").in_time_zone
+        end
+        @last_time = time
+        time
+      end
+    end
+
     def initialize
       @agent = WWW::Mechanize.new
       puts "*** New Session ***"
@@ -47,17 +63,11 @@ module NationalRailEnquiries
           form["_includeOvertakenTrains"] = "on"
         end.click_button
 
-        # date = options[:time].strftime("%Y-%m-%d")
+        if (times_page.doc/"error-message").any?
+          raise (times_page.doc/"error-message").first.inner_text.gsub(/\s+/, " ").strip
+        end
 
         date = Date.parse((times_page.doc/".journey-details span:nth-child(0)").first.inner_text.gsub(/\s+/, " ").gsub(/\+ 1 day/, '').strip)
-
-        # expected_date = options[:time].strftime("%a %d %b")
-        # actual_date = (times_page.doc/".journey-details span:nth-child(0)").first.inner_text.gsub(/\s+/, " ").strip
-        # unless actual_date == expected_date
-        #   puts "Aborting because journeys are for #{actual_date} rather than #{expected_date}"
-        #   File.open("abort.html", "w") { |f| f.write(@agent.current_page.parser.to_html) }
-        #   return nil
-        # end
 
         (times_page.doc/"table#outboundJourneyTable > tbody > tr:not(.status):not(.changes)").each do |tr|
 
@@ -67,7 +77,7 @@ module NationalRailEnquiries
             next
           end
 
-          departure_time = time(date, (tr/"td.leaving").inner_text.strip)
+          departure_time = TimeParser.new(date).time((tr/"td.leaving").inner_text.strip)
           departure_time_formatted = departure_time.localtime.strftime("%Y-%m-%d %H:%M")
           unless departure_time > options[:time]
             puts "#{departure_time_formatted} departure skipped because departure time is earlier than the search time"
@@ -91,18 +101,15 @@ module NationalRailEnquiries
             sleep(2 + 4 * (rand - 0.5))
             details_page = link.click
 
-begin
-            expected_description = "#{options[:from]} to #{options[:to]}"
-            actual_description = (details_page.doc/"table#journeyLegDetails tbody tr.lastRow td[@colspan=6] div").first.inner_text.gsub(/\s+/, " ")
-rescue => e
-  File.open("details.html", "w") { |f| f.write(details_page.parser.to_html) }
-  raise e
-end
+            description = (details_page.doc/"table#journeyLegDetails tbody tr.lastRow td[@colspan=6] div").first.inner_text.gsub(/\s+/, " ").strip
+            origins, destinations = (/from (.*) to (.*)/.match(description)[1,2]).map{ |s| s.split(",").map(&:strip) }
 
-            unless actual_description.index(expected_description)
-              puts "#{departure_time_formatted} departure skipped because actual description: #{actual_description} doesn't match: #{expected_description}"
+            unless origins.include?(options[:from]) && destinations.include?(options[:to])
+              puts "#{departure_time_formatted} departure skipped because expected origin (#{options[:from]}) and destination (#{options[:to]}) are not in origins(#{origins.join(",")}) and destinations (#{destinations.join(",")})"
               next
             end
+
+            parser = TimeParser.new(date)
 
             events = []
             origin_code = (details_page.doc/"td.origin abbr").inner_html.strip
@@ -110,7 +117,7 @@ end
             events << {
               :type => Event::OriginDeparture,
               :station_code => origin_code,
-              :timetabled_at => time(date, departs_at)
+              :timetabled_at => parser.time(departs_at)
             }
 
             (details_page.doc/".callingpoints table > tbody > tr").each do |tr|
@@ -123,12 +130,12 @@ end
                 events << {
                   :type => Event::Arrival,
                   :station_code => station_code,
-                  :timetabled_at => time(date, arrives_at)
+                  :timetabled_at => parser.time(arrives_at)
                 }
                 events << {
                   :type => Event::Departure,
                   :station_code => station_code,
-                  :timetabled_at => time(date, departs_at)
+                  :timetabled_at => parser.time(departs_at)
                 }
               end
             end
@@ -138,7 +145,7 @@ end
             events << {
               :type => Event::DestinationArrival,
               :station_code => destination_code,
-              :timetabled_at => time(date, arrives_at)
+              :timetabled_at => parser.time(arrives_at)
             }
 
             yield(events)
@@ -149,12 +156,6 @@ end
     rescue => e
       File.open("error.html", "w") { |f| f.write(@agent.current_page.parser.to_html) }
       raise e
-    end
-
-    private
-
-    def time(date, hours_and_minutes)
-      Time.parse("#{hours_and_minutes} #{date}").in_time_zone
     end
   end
 end
