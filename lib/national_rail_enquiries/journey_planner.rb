@@ -19,13 +19,16 @@ module NationalRailEnquiries
         @last_time = nil
       end
       def time(hours_and_minutes)
-        time = Time.parse("#{hours_and_minutes} #{@date}").in_time_zone
+        time = parse(hours_and_minutes)
         if @last_time && (time < @last_time)
           @date += 1
-          time = Time.parse("#{hours_and_minutes} #{@date}").in_time_zone
+          time = parse(hours_and_minutes)
         end
         @last_time = time
         time
+      end
+      def parse(hours_and_minutes)
+        Time.parse("#{hours_and_minutes} #{@date}").in_time_zone
       end
     end
 
@@ -130,7 +133,6 @@ module NationalRailEnquiries
 
           if (tr.attributes["class"] == "day-heading")
             date = Date.parse((tr/"th > p > span").first.inner_text.strip)
-            puts "New date set: #{date} because date boundary found"
             next
           end
 

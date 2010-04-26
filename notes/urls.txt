@@ -1,0 +1,32 @@
+http://traintimes.org.uk/london/leeds/10:00/next-tuesday/16:00/next-wednesday
+http://traintimes.org.uk/london/leeds/10:00/next-tuesday/
+http://traintimes.org.uk/london/leeds/13:45/2010-04-18
+
+
+http://realtime.nationalrail.co.uk/ldb/sumdep.aspx?T=DHM
+http://realtime.nationalrail.co.uk/ldb/sumdep.aspx?T=DHM&S=KGX
+http://realtime.nationalrail.co.uk/ldb/sumdep.aspx?T=BHM&S=DHM
+
+http://realtime.nationalrail.co.uk/ldb/train.aspx?C=BHM&T=BHAMNWS+&J=184126
+http://realtime.nationalrail.co.uk/ldb/train.aspx?C=BHM&T=BHAMNWS+&J=172023
+
+
+
+http://trainplotter.com/2010-04-03/durham/1100/peterborough/1300
+http://trainplotter.com/2010-04-03/durham/1100/london/1400
+http://trainplotter.com/2010-04-03/newcastle/1030/london/1400
+http://trainplotter.com/2010-04-03/york/1200/peterborough/1300
+
+==>
+
+http://trainplotter.com/2010-04-03/newcastle/1030/london/1400
+
+
+
+http://www.livedepartureboards.co.uk/virgintrains/train.aspx?T=DRHM++++&J=164973&R=0
+
+
+
+/usr/local/ruby/bin/ruby /Users/jamesmead/WebApps/trainplotter/scrape.rb
+
+* think about accessing scraped websites via apigee proxy and allowing them to set the rate limits
