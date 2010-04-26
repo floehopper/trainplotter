@@ -1,0 +1,45 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "jquery-1.4.2.min" %>
+  <%= javascript_include_tag "search_journeys" %>
+  <%= javascript_include_tag "http://code.google.com/apis/gears/gears_init.js" %>
+  <%= javascript_include_tag "geo" %>
+  <%= javascript_include_tag "geo_position_js_simulator" %>
+<% end %>
+
+<% form_tag search_journeys_path, :method => :get do %>
+    <%= label_tag :station_code, "Departing From:" %>
+    <%= select_tag :station_code, options_from_collection_for_select(@stations, :code, :name) %>
+    <%= label_tag :departs_around, "Departing Around:" %>
+    <%= select_time @departs_around, :prefix => "departs_around", :minute_step => 15 %>
+    <%= hidden_field_tag :latitude, params[:latitude] %>
+    <%= hidden_field_tag :longitude, params[:longitude] %>
+    <%= submit_tag "Search" %>
+<% end %>
+
+<br />
+
+<% unless @departures.empty? %>
+  <table>
+    <thead>
+      <tr>
+        <th>Station</th>
+        <th>Departs</th>
+        <th>Destination</th>
+        <th>Arrives</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @departures.each do |departure| %>
+      <% journey = departure.journey %>
+      <tr>
+        <td><%= "#{departure.station.name} (#{departure.station.code})" %></td>
+        <td><%= departure.timetabled_at.to_s(:time) %></td>
+        <td><%= "#{journey.destination_station.name} (#{journey.destination_station.code})" %></td>
+        <td><%= journey.arrives_at.to_s(:time) %></td>
+        <td><%= link_to "link", journey %></td>
+      </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

@@ -1,0 +1,13 @@
+<% form_for(@journey, :url => search_journeys_path, :html => { :method => :get }) do |form| %>
+  <% form.fields_for :origin_departure do |fields| %>
+    <%= fields.label :station_id, "Origin" %>
+    <%= fields.select :station_id, options_from_collection_for_select(@stations, :id, :name) %>
+    <%= fields.label :timetabled_at, "Departs" %>
+    <%= fields.select :timetabled_at, [] %>
+  <% end %>
+  <% form.fields_for :destination_arrival do |fields| %>
+    <%= fields.label :id, "Destination" %>
+    <%= fields.select :id, [] %>
+  <% end %>
+  <%= form.submit "Search" %>
+<% end %>

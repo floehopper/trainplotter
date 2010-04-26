@@ -1,0 +1,22 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "jquery-1.4.2.min" %>
+  <%= javascript_include_tag "application" %>
+  <%= javascript_include_tag "http://code.google.com/apis/gears/gears_init.js" %>
+  <%= javascript_include_tag "geo" %>
+  <%= javascript_include_tag "geo_position_js_simulator" %>
+<% end %>
+
+<table id="journeys">
+  <thead>
+    <tr>
+      <th>Origin</th>
+      <th>Departs</th>
+      <th>Destination</th>
+      <th>Arrives</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render :partial => "journeys" %>
+  </tbody>
+</table>

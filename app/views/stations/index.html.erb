@@ -1,0 +1,22 @@
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Code</th>
+      <th>Latitude</th>
+      <th>Longitude</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @stations.each do |station| %>
+    <tr>
+      <td><%= station.name %></td>
+      <td><%= station.code %></td>
+      <td><%= station.latitude %></td>
+      <td><%= station.longitude %></td>
+      <td><%= link_to "Link", station.google_map_url %></td>
+    </tr>
+    <% end %>
+  </tbody>
+</table>

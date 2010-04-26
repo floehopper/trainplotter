@@ -5,3 +5,17 @@
 #   
 #   cities = City.create([{ :name => 'Chicago' }, { :name => 'Copenhagen' }])
 #   Major.create(:name => 'Daley', :city => cities.first)
+
+# stations = NationalRailEnquiries::Stations.new
+# stations.each do |name, code|
+#   Station.create!(:name => name, :code => code)
+# end
+
+stations = Blueghost::Stations.new
+stations.each do |name, code, latitude, longitude|
+  if station = Station.find_by_code(code)
+    station.update_attributes!(:latitude => latitude, :longitude => longitude)
+  else
+    puts "Ignoring #{name} (#{code})"
+  end
+end

@@ -48,6 +48,8 @@ origins_vs_destinations.each do |origins, destinations|
             next
           end
 
+          sleep(2 + 4 * (rand - 0.5))
+
           details = summary_row.details
           origins, destinations = details[:origins], details[:destinations]
           unless origins.include?(origin) && destinations.include?(destination)
