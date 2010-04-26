@@ -1,9 +1,0 @@
-<% @journeys.each do |journey| %>
-<tr>
-  <td><%= "#{journey.origin_station.name} (#{journey.origin_station.code})" %></td>
-  <td><%= journey.departs_at.to_s(:time) %></td>
-  <td><%= "#{journey.destination_station.name} (#{journey.destination_station.code})" %></td>
-  <td><%= journey.arrives_at.to_s(:time) %></td>
-  <td><%= link_to "link", journey %></td>
-</tr>
-<% end %>

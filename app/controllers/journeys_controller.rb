@@ -1,5 +1,16 @@
 class JourneysController < ApplicationController
-  
+
+  def index
+    @journeys = Journey.all(:include => { :events => :station })
+  end
+
+  def show
+    unless @journey = Journey.find_by_identifier(params[:id])
+      @journey = Journey.find_canonical(params[:id])
+      redirect_to journey_path(@journey), :status => :moved_permanently
+    end
+  end
+
   def search
     @stations = Station.all
     @departs_around = Time.current
@@ -17,40 +28,6 @@ class JourneysController < ApplicationController
       longitude = params[:longitude]
       within = 10
       @stations = Station.find(:all, :origin => [latitude, longitude], :within => within, :order => "distance ASC")
-    end
-  end
-  
-  def index
-    # @journey = Journey.new(:events => [Event::OriginDeparture.new, Event::DestinationArrival.new])
-    @journeys = Journey.all(:include => { :events => :station })
-    @stations = @journeys.map(&:events).flatten.map(&:station).uniq.sort_by(&:name)
-    if request.xhr?
-      render :partial => "journeys", :layout => false
-    end
-  end
-  
-  def departing_soon
-    # @journeys = Journey.departing_within(10.minutes).all(:include => { :events => :station })
-    # if coords = params[:coords]
-    #   stations = Station.find(:all, :origin => coords, :within => 20, :order => "distance ASC")
-    #   @journeys = @journeys.select { |j| stations.include?(j.departing_station) }.sort_by { |j| stations.index(j.departing_station) }
-    # end
-    # if request.xhr?
-    #   render :partial => "journeys", :layout => false
-    # end
-  end
-
-  # def search
-  #   origin_departure = Event::OriginDeparture.new(params[:journey][:origin_departure])
-  #   destination_arrival = Event::DestinationArrival.new(params[:journey][:destination_arrival])
-  #   journey = Journey.new(:events => [origin_departure, destination_arrival])
-  #   redirect_to journey_path(journey.generate_identifier)
-  # end
-
-  def show
-    unless @journey = Journey.find_by_identifier(params[:id])
-      @journey = Journey.find_canonical(params[:id])
-      redirect_to journey_path(@journey), :status => :moved_permanently
     end
   end
 

@@ -1,4 +1,6 @@
 ActionController::Routing::Routes.draw do |map|
-  map.resources :journeys, :collection => { :search => :get, :departing_soon => :get }, :has_many => :positions
-  map.resources :stations, :collection => { :nearby => :get }
+  map.resources :journeys, :only => [:index, :show], :collection => { :search => :get } do |journeys|
+    journeys.resources :positions, :only => [:create]
+  end
+  map.resources :stations, :only => [:index], :collection => { :nearby => :get }
 end

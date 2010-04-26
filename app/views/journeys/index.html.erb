@@ -1,11 +1,3 @@
-<% content_for :javascript do %>
-  <%= javascript_include_tag "jquery-1.4.2.min" %>
-  <%= javascript_include_tag "application" %>
-  <%= javascript_include_tag "http://code.google.com/apis/gears/gears_init.js" %>
-  <%= javascript_include_tag "geo" %>
-  <%= javascript_include_tag "geo_position_js_simulator" %>
-<% end %>
-
 <table id="journeys">
   <thead>
     <tr>
@@ -17,6 +9,14 @@
     </tr>
   </thead>
   <tbody>
-    <%= render :partial => "journeys" %>
+    <% @journeys.each do |journey| %>
+    <tr>
+      <td><%= "#{journey.origin_station.name} (#{journey.origin_station.code})" %></td>
+      <td><%= journey.departs_at.to_s(:time) %></td>
+      <td><%= "#{journey.destination_station.name} (#{journey.destination_station.code})" %></td>
+      <td><%= journey.arrives_at.to_s(:time) %></td>
+      <td><%= link_to "link", journey %></td>
+    </tr>
+    <% end %>
   </tbody>
 </table>
