@@ -1,5 +1,7 @@
 class JourneysController < ApplicationController
 
+  TIME_RESOLUTION_IN_MINUTES = 15
+
   def index
     @journeys = Journey.all(:include => { :events => :station })
   end
@@ -13,7 +15,8 @@ class JourneysController < ApplicationController
 
   def search
     @stations = Station.all
-    @departs_around = Time.current
+    time_resolution = TIME_RESOLUTION_IN_MINUTES.minutes
+    @departs_around = Time.zone.at(Time.current.to_i.div(time_resolution) * time_resolution)
     @departures = []
     if params[:station_code] && params[:departs_around]
       hour = params[:departs_around][:hour]

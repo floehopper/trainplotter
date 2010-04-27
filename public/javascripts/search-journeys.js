@@ -1,9 +1,10 @@
 $(document).ready(function () {
 
-  // stubs out geo-location for testing
-  geo_position_js_simulator.init([
-    { coords: { latitude : 53.5228, longitude : -1.1398 }, duration : 5000 }
-  ]);
+  if (typeof(geo_position_js_simulator) != "undefined") {
+    geo_position_js_simulator.init([
+      { coords: { latitude : 53.5228, longitude : -1.1398 }, duration : 5000 }
+    ]);
+  };
 
   latitude = $("input#latitude").attr("value");
   longitude = $("input#longitude").attr("value");

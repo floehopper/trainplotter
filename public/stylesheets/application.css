@@ -5,3 +5,11 @@ table, th, td {
 table#positions {
   display: none;
 }
+
+table#stops .latitude {
+  display: none;
+}
+
+table#stops .longitude {
+  display: none;
+}

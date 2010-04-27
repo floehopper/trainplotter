@@ -1,9 +1,12 @@
+<% content_for :title do %>
+  <title><%= "#{@journey.departs_at.to_s(:time)} #{@journey.origin_station.name} to  #{@journey.destination_station.name} on #{@journey.departs_on}" %></title>
+<% end %>
+
 <% content_for :javascript do %>
-  <%= javascript_include_tag "jquery-1.4.2.min" %>
-  <%= javascript_include_tag "record-position" %>
   <%= javascript_include_tag "http://code.google.com/apis/gears/gears_init.js" %>
-  <%= javascript_include_tag "geo" %>
   <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true&region=GB"></script>
+  <%= javascript_include_tag %w(jquery-1.4.2.min jquery-ui-1.8.custom.min geo record-position) %>
+  <%= javascript_include_tag "geo_position_js_simulator" %>
 <% end %>
 
 <br />
@@ -11,33 +14,25 @@
 <table id="stops">
   <thead>
     <tr>
-      <th>Station</th>
-      <th>Arrives</th>
-      <th>Departs</th>
+      <th class="name">Station</th>
+      <th class="departs_at">Arrives</th>
+      <th class="arrives_at">Departs</th>
+      <th class="latitude">Latitude</th>
+      <th class="longitude">Longitude</th>
     </tr>
   </thead>
   <tbody>
     <% @journey.each_stop do |station, arrives_at, departs_at| %>
     <tr>
-      <td><%= "#{station.name} (#{station.code})" %></td>
-      <td><%= arrives_at.to_s(:time) if arrives_at.present? %></td>
-      <td><%= departs_at.to_s(:time) if departs_at.present? %></td>
+      <td class="name"><%= link_to station.name, station.google_map_url %></td>
+      <td class="arrives_at"><%= arrives_at.to_s(:time) if arrives_at.present? %></td>
+      <td class="departs_at"><%= departs_at.to_s(:time) if departs_at.present? %></td>
+      <td class="latitude"><%= station.latitude %></td>
+      <td class="longitude"><%= station.longitude %></td>
     </tr>
     <% end %>
   </tbody>
 </table>
-
-<br />
-
-<% form_tag "#" do %>
-  <%= label_tag "log_position" %>
-  <%= check_box_tag "log_position", "on", false %>
-  <%= label_tag "log_interval", "every" %>
-  <%= select_tag "log_interval", options_for_select((1..10)) %>
-  &nbsp;minutes
-<% end %>
-
-<br />
 
 <table id="positions">
   <thead>
@@ -53,6 +48,16 @@
     <% end %>
   </tbody>
 </table>
+
+<br />
+
+<% form_tag "#" do %>
+  <%= label_tag "log_position" %>
+  <%= check_box_tag "log_position", "on", false %>
+  <%= label_tag "log_interval", "every" %>
+  <%= select_tag "log_interval", options_for_select((1..5)) %>
+  &nbsp;minutes
+<% end %>
 
 <br />
 
