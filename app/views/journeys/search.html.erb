@@ -1,7 +1,9 @@
 <% content_for :javascript do %>
   <%= javascript_include_tag "http://code.google.com/apis/gears/gears_init.js" %>
   <%= javascript_include_tag %w(jquery-1.4.2.min geo search-journeys) %>
-  <%= javascript_include_tag "geo_position_js_simulator" %>
+  <% unless Rails.env.production? %>
+    <%= javascript_include_tag "geo_position_js_simulator" %>
+  <% end %>
 <% end %>
 
 <% form_tag search_journeys_path, :method => :get do %>
