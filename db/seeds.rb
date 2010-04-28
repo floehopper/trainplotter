@@ -6,16 +6,30 @@
 #   cities = City.create([{ :name => 'Chicago' }, { :name => 'Copenhagen' }])
 #   Major.create(:name => 'Daley', :city => cities.first)
 
+puts "Creating stations with names and codes"
 stations = NationalRailEnquiries::Stations.new
 stations.each do |name, code|
-  Station.create!(:name => name, :code => code)
+  if station = Station.find_by_code(code)
+    puts "#{name} (#{code}) already exists"
+  else
+    Station.create!(:name => name, :code => code)
+  end
 end
 
+puts "Adding station latitudes and longitudes"
 stations = Blueghost::Stations.new
 stations.each do |name, code, latitude, longitude|
   if station = Station.find_by_code(code)
     station.update_attributes!(:latitude => latitude, :longitude => longitude)
   else
-    puts "Ignoring #{name} (#{code})"
+    puts "#{name} (#{code}) not found"
   end
 end
+
+puts "Adding missing station latitudes and longitudes"
+Station.find_by_code("SFA").update_attributes!(
+  :latitude => 51.5445797, :longitude => -0.0097182
+)
+Station.find_by_code("EBD").update_attributes!(
+  :latitude => 51.4428002, :longitude => 0.3209516
+)
