@@ -85,7 +85,8 @@ module NationalRailEnquiries
         }
         details
       rescue => e
-        File.open("details-error.html", "w") { |f| f.write(page.parser.to_html) }
+        filename = File.join(Rails.root, "log", "details-error.html")
+        File.open(filename, "w") { |f| f.write(page.parser.to_html) }
         raise e
       end
     end
@@ -146,7 +147,8 @@ module NationalRailEnquiries
       end
       summary_rows
     rescue => e
-      File.open("error.html", "w") { |f| f.write(@agent.current_page.parser.to_html) }
+      filename = File.join(Rails.root, "log", "summary-error.html")
+      File.open(filename, "w") { |f| f.write(@agent.current_page.parser.to_html) }
       raise e
     end
   end
