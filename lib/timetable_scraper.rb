@@ -33,19 +33,19 @@ class TimetableScraper
 
             summary_rows = planner.plan(:from => origin, :to => destination, :time => time)
             summary_rows.each do |summary_row|
-              print summary_row.departure_time.localtime.to_s(:short)
+              timestamp = summary_row.departure_time.localtime.to_s(:short)
 
               unless summary_row.departure_time > time
-                Rails.logger.info " - skipped because departure time is earlier than the search time"
+                Rails.logger.info "#{timestamp} - skipped because departure time is earlier than the search time"
                 next
               end
               unless summary_row.departure_time.to_date == time.to_date
-                Rails.logger.info " - aborting because departure time is not on the same day"
+                Rails.logger.info "#{timestamp} - aborting because departure time is not on the same day"
                 finished = true
                 break
               end
               unless summary_row.number_of_changes == "0"
-                Rails.logger.info " - skipped because it has #{summary_row.number_of_changes} changes"
+                Rails.logger.info "#{timestamp} - skipped because it has #{summary_row.number_of_changes} changes"
                 next
               end
 
@@ -54,16 +54,15 @@ class TimetableScraper
               details = summary_row.details
               origins, destinations = details[:origins], details[:destinations]
               unless origins.include?(origin) && destinations.include?(destination)
-                Rails.logger.info " - skipped because journey is from #{origins.join(",")} to #{destinations.join(",")}"
+                Rails.logger.info "#{timestamp} - skipped because journey is from #{origins.join(",")} to #{destinations.join(",")}"
                 next
               end
-              Rails.logger.info " - departure with #{details[:stops].length} stops found"
+              Rails.logger.info "#{timestamp} - departure with #{details[:stops].length} stops found"
 
               journey = Journey.build_from(details)
 
               unless journey.save
-                print summary_row.departure_time.localtime.to_s(:short)
-                Rails.logger.info " - journey not valid: #{journey.errors.full_messages}"
+                Rails.logger.info "#{timestamp} - journey not valid: #{journey.errors.full_messages}"
               end
             end
 
