@@ -20,7 +20,7 @@ module NationalRailEnquiries
 
     def each
       @agent.get("http://www.nationalrail.co.uk/stations/codes/") do |stations_page|
-        (stations_page.doc/".aztable tbody tr").each do |tr|
+        (stations_page.doc/"table:nth-child(0) tbody tr").each do |tr|
           name, code = (tr/"td").map { |td| td.inner_text }
           yield(name, code) unless name == "DUMMY TEST"
         end
