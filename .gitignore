@@ -1,3 +1,15 @@
 tmp
 log
 config/database.yml
+vendor/gems/hpricot-0.8.2/ext/fast_xs/Makefile
+vendor/gems/hpricot-0.8.2/ext/fast_xs/fast_xs.bundle
+vendor/gems/hpricot-0.8.2/ext/fast_xs/fast_xs.o
+vendor/gems/hpricot-0.8.2/ext/fast_xs/mkmf.log
+vendor/gems/hpricot-0.8.2/ext/hpricot_scan/Makefile
+vendor/gems/hpricot-0.8.2/ext/hpricot_scan/conftest.dSYM/
+vendor/gems/hpricot-0.8.2/ext/hpricot_scan/hpricot_css.o
+vendor/gems/hpricot-0.8.2/ext/hpricot_scan/hpricot_scan.bundle
+vendor/gems/hpricot-0.8.2/ext/hpricot_scan/hpricot_scan.o
+vendor/gems/hpricot-0.8.2/ext/hpricot_scan/mkmf.log
+vendor/gems/hpricot-0.8.2/lib/fast_xs.bundle
+vendor/gems/hpricot-0.8.2/lib/hpricot_scan.bundle
