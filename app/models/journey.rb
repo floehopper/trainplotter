@@ -18,10 +18,8 @@ class Journey < ActiveRecord::Base
   named_scope :on_same_date_as, lambda { |journey|
     { :conditions => ["departing_at >= ? AND departing_at <= ?", journey.departing_at.beginning_of_day, journey.departing_at.end_of_day] }
   }
-
-  HACKED_TIME = Time.zone.parse("2010-04-16 09:00 +01:00")
   named_scope :departing_within, lambda { |duration|
-    { :conditions => ["departing_at >= ? AND departing_at <= ?", duration.ago(HACKED_TIME), duration.from_now(HACKED_TIME)] }
+    { :conditions => ["departing_at >= ? AND departing_at <= ?", duration.ago, duration.from_now] }
   }
 
   class << self
@@ -69,8 +67,8 @@ class Journey < ActiveRecord::Base
 
     def find_canonical(identifier)
       origin_station, departs_at, destination_station, arrives_at = parse_identifier(identifier)
-      departure_events = Event.find(:all, :conditions => { :type => %w(Event::OriginDeparture Event::Departure), :station_id => origin_station.id, :timetabled_at => departs_at })
-      arrival_events = Event.find(:all, :conditions => { :type => %w(Event::Arrival Event::DestinationArrival), :station_id => destination_station.id, :timetabled_at => arrives_at })
+      departure_events = Event.departures.at_station(origin_station).timetabled_at(departs_at)
+      arrival_events = Event.arrivals.at_station(destination_station).timetabled_at(arrives_at)
       journeys_in_common = departure_events.map(&:journey) & arrival_events.map(&:journey)
       case journeys_in_common.length
         when 0 then raise ActiveRecord::RecordNotFound, "No journey found for identifier: #{identifier}"
