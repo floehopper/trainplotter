@@ -79,6 +79,7 @@ $(document).ready(function () {
     zoom : 12,
     mapTypeId : google.maps.MapTypeId.ROADMAP
   });
+  nodes = [];
   $("table#stops tbody tr").each(function(index) {
     name = $(this).find(".name").text();
     link = $(this).find(".name a");
@@ -87,6 +88,7 @@ $(document).ready(function () {
     latitude = $(this).find(".latitude").text();
     longitude = $(this).find(".longitude").text();
     var location = new google.maps.LatLng(latitude, longitude);
+    nodes.push(location);
     link.click(function() {
       map.setCenter(location);
       return false;
@@ -114,6 +116,10 @@ $(document).ready(function () {
     if (index == 0) {
       map.setCenter(location);
     }
+  });
+  var line = new google.maps.Polyline({
+    path : nodes,
+    map : map
   });
   $("table#positions tbody tr").each(function() {
     latitude = $(this).find(".latitude").text();

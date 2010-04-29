@@ -2,7 +2,7 @@ $(document).ready(function () {
 
   if (typeof(geo_position_js_simulator) != "undefined") {
     geo_position_js_simulator.init([
-      { coords: { latitude : 53.5228, longitude : -1.1398 }, duration : 5000 }
+      { coords: { latitude : 51.5445797, longitude : -0.0097182 }, duration : 5000 }
     ]);
   };
 
