@@ -80,7 +80,8 @@ $(document).ready(function () {
     mapTypeId : google.maps.MapTypeId.ROADMAP
   });
   nodes = [];
-  $("table#stops tbody tr").each(function(index) {
+  bounds = new google.maps.LatLngBounds;
+  $("table#stops tbody tr").each(function() {
     name = $(this).find(".name").text();
     link = $(this).find(".name a");
     arrives_at = $(this).find(".arrives_at").text();
@@ -89,6 +90,7 @@ $(document).ready(function () {
     longitude = $(this).find(".longitude").text();
     var location = new google.maps.LatLng(latitude, longitude);
     nodes.push(location);
+    bounds.extend(location);
     link.click(function() {
       map.setCenter(location);
       return false;
@@ -113,14 +115,12 @@ $(document).ready(function () {
     google.maps.event.addListener(marker, 'click', function() {
       infoWindow.open(map, marker);
     });
-    if (index == 0) {
-      map.setCenter(location);
-    }
   });
   var line = new google.maps.Polyline({
     path : nodes,
     map : map
   });
+  map.fitBounds(bounds);
   $("table#positions tbody tr").each(function() {
     latitude = $(this).find(".latitude").text();
     longitude = $(this).find(".longitude").text();
