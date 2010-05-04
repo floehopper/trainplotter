@@ -13,13 +13,11 @@ class Journey < ActiveRecord::Base
 
   before_save :store_identifier
 
-  default_scope :order => "departing_at ASC"
-
   class << self
     
     def build_from(details)
       initial_stop = details[:initial_stop]
-      journey = Journey.new(:departing_at => initial_stop[:departs_at])
+      journey = Journey.new
       journey.events << Event::OriginDeparture.new(
         :journey => journey,
         :station => Station.find_by_code(initial_stop[:station_code]),

@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100423113543) do
+ActiveRecord::Schema.define(:version => 20100504142727) do
 
   create_table "events", :force => true do |t|
     t.string   "type"
@@ -25,13 +25,11 @@ ActiveRecord::Schema.define(:version => 20100423113543) do
   add_index "events", ["timetabled_at"], :name => "index_events_on_timetabled_at"
 
   create_table "journeys", :force => true do |t|
-    t.datetime "departing_at"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "identifier"
   end
 
-  add_index "journeys", ["departing_at"], :name => "index_journeys_on_departing_at"
   add_index "journeys", ["identifier"], :name => "index_journeys_on_identifier"
 
   create_table "positions", :force => true do |t|
