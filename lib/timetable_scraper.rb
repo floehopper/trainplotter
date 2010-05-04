@@ -20,12 +20,10 @@ class TimetableScraper
     }
   }
 
-  def scrape(line, date, delay_average = 2, delay_variation = 2)
+  def scrape(line, time, delay_average = 2, delay_variation = 2)
     ORIGINS_VS_DESTINATIONS[line].each do |origins, destinations|
       origins.each do |origin|
         destinations.each do |destination|
-          time = date.to_time.localtime.beginning_of_day
-
           finished = false
           while !finished
             planner = NationalRailEnquiries::JourneyPlanner.new
