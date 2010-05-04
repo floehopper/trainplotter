@@ -144,7 +144,8 @@ class Journey < ActiveRecord::Base
   end
 
   def must_be_unique_for_date
-    if Journey.on_same_date_as(self).map(&:identifier).include?(generate_identifier)
+    journeys = Event.origin_departures.at_station(origin_station).timetabled_at(departs_at).all(:include => :journey).map(&:journey) & Event.destination_arrivals.at_station(destination_station).timetabled_at(arrives_at).all(:include => :journey).map(&:journey)
+    unless journeys.empty?
       errors.add_to_base("must be unique for date")
     end
   end
