@@ -11,7 +11,7 @@ class Journey < ActiveRecord::Base
   validate :must_have_exactly_one_origin_departure
   validate :must_have_exactly_one_destination_arrival
 
-  before_validation :store_identifier
+  before_save :store_identifier
 
   default_scope :order => "departing_at ASC"
 
