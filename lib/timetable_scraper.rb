@@ -32,7 +32,7 @@ class TimetableScraper
 
             summary_rows = planner.plan(:from => origin, :to => destination, :time => time)
             summary_rows.each do |summary_row|
-              timestamp = summary_row.departure_time.localtime.to_s(:short)
+              timestamp = summary_row.departure_time.to_s(:short)
 
               unless summary_row.departure_time > time
                 Rails.logger.info "#{timestamp} - skipped because departure time is earlier than the search time"
@@ -68,7 +68,7 @@ class TimetableScraper
             if summary_rows.empty?
               time += 1.minute
             else
-              time = summary_rows.last.departure_time.localtime + 1.minute
+              time = summary_rows.last.departure_time + 1.minute
             end
           end
         end

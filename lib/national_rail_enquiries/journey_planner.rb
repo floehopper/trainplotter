@@ -28,7 +28,7 @@ module NationalRailEnquiries
         time
       end
       def parse(hours_and_minutes)
-        Time.parse("#{hours_and_minutes} #{@date}").in_time_zone
+        Time.zone.parse("#{hours_and_minutes} #{@date}")
       end
     end
 

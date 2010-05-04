@@ -22,7 +22,7 @@ class JourneysController < ApplicationController
       hour = params[:departs_around][:hour]
       minute = params[:departs_around][:minute]
       today = Date.today
-      @departs_around = Time.parse("#{hour}:#{minute} #{today}").in_time_zone
+      @departs_around = Time.zone.parse("#{hour}:#{minute} #{today}")
       station = Station.find_by_code(params[:station_code])
       @departures = station.events.departures.timetabled_around(@departs_around, 15.minutes).all(:include => :journey)
     end

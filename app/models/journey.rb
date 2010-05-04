@@ -58,10 +58,10 @@ class Journey < ActiveRecord::Base
       origin_station = Station.find_by_code(origin_code)
       departure_date.insert(4, "-").insert(-3, "-")
       departure_time.insert(2, ":")
-      departs_at = Time.parse("#{departure_time} #{departure_date}").in_time_zone
+      departs_at = Time.zone.parse("#{departure_time} #{departure_date}")
       destination_station = Station.find_by_code(destination_code)
       arrival_time.insert(2, ":")
-      arrives_at = Time.parse("#{arrival_time} #{departure_date}").in_time_zone
+      arrives_at = Time.zone.parse("#{arrival_time} #{departure_date}")
       [origin_station, departs_at, destination_station, arrives_at]
     end
 
@@ -92,11 +92,11 @@ class Journey < ActiveRecord::Base
   end
 
   def departs_at
-    origin_departure.timetabled_at.localtime
+    origin_departure.timetabled_at
   end
 
   def departs_on
-    origin_departure.timetabled_at.localtime.to_date
+    origin_departure.timetabled_at.to_date
   end
 
   def destination_arrivals
@@ -112,7 +112,7 @@ class Journey < ActiveRecord::Base
   end
 
   def arrives_at
-    destination_arrival.timetabled_at.localtime
+    destination_arrival.timetabled_at
   end
 
   def to_param
@@ -131,8 +131,8 @@ class Journey < ActiveRecord::Base
 
   def each_stop
     events.group_by(&:station).each do |station, events|
-      arrives_at = events.detect { |e| Event::Arrival === e }.try(:timetabled_at).try(:localtime)
-      departs_at = events.detect { |e| Event::Departure === e }.try(:timetabled_at).try(:localtime)
+      arrives_at = events.detect { |e| Event::Arrival === e }.try(:timetabled_at)
+      departs_at = events.detect { |e| Event::Departure === e }.try(:timetabled_at)
       yield(station, arrives_at, departs_at)
     end
   end
