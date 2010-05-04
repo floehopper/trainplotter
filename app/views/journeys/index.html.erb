@@ -1,6 +1,7 @@
 <table id="journeys">
   <thead>
     <tr>
+      <th>Date</th>
       <th>Origin</th>
       <th>Departs</th>
       <th>Destination</th>
@@ -11,6 +12,7 @@
   <tbody>
     <% @journeys.each do |journey| %>
     <tr>
+      <td><%= journey.departs_at.to_date %></td>
       <td><%= "#{journey.origin_station.name} (#{journey.origin_station.code})" %></td>
       <td><%= journey.departs_at.to_s(:time) %></td>
       <td><%= "#{journey.destination_station.name} (#{journey.destination_station.code})" %></td>
