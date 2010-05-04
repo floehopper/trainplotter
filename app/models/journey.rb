@@ -15,13 +15,6 @@ class Journey < ActiveRecord::Base
 
   default_scope :order => "departing_at ASC"
 
-  named_scope :on_same_date_as, lambda { |journey|
-    { :conditions => ["departing_at >= ? AND departing_at <= ?", journey.departing_at.beginning_of_day, journey.departing_at.end_of_day] }
-  }
-  named_scope :departing_within, lambda { |duration|
-    { :conditions => ["departing_at >= ? AND departing_at <= ?", duration.ago, duration.from_now] }
-  }
-
   class << self
     
     def build_from(details)
