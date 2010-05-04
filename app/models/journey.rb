@@ -1,11 +1,11 @@
 class Journey < ActiveRecord::Base
 
-  has_many :events
+  has_many :events, :dependent => :destroy
 
   has_many :departures, :class_name => "Event::Departure"
   has_many :arrivals, :class_name => "Event::Arrival"
-  
-  has_many :positions
+
+  has_many :positions, :dependent => :destroy
 
   validate :must_be_unique_for_date
   validate :must_have_exactly_one_origin_departure
@@ -14,7 +14,7 @@ class Journey < ActiveRecord::Base
   before_save :store_identifier
 
   class << self
-    
+
     def build_from(details)
       initial_stop = details[:initial_stop]
       journey = Journey.new
