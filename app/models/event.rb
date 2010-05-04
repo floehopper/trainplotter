@@ -11,6 +11,7 @@ class Event < ActiveRecord::Base
 
   named_scope :arrivals, :conditions => { :type => %w(Event::Arrival Event::DestinationArrival) }
   named_scope :departures, :conditions => { :type => %w(Event::Departure Event::OriginDeparture) }
+  named_scope :origin_departures, :conditions => { :type => "Event::OriginDeparture" }
   named_scope :at_station, lambda { |station| { :conditions => { :station_id => station.id } } }
   named_scope :timetabled_at, lambda { |time| { :conditions => ["timetabled_at = ?", time] } }
   named_scope :timetabled_on, lambda { |time| { :conditions => ["timetabled_at >= ? AND timetabled_at <= ?", time.beginning_of_day, time.end_of_day] } }

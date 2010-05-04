@@ -3,7 +3,7 @@ class JourneysController < ApplicationController
   TIME_RESOLUTION_IN_MINUTES = 15
 
   def index
-    @journeys = Journey.all(:include => { :events => :station })
+    @journeys = Event.origin_departures.all(:include => :journey).map(&:journey)
   end
 
   def show
