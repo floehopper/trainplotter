@@ -20,6 +20,7 @@ Rails::Initializer.run do |config|
   # config.gem "sqlite3-ruby", :lib => "sqlite3"
   # config.gem "aws-s3", :lib => "aws/s3"
 
+  config.gem "mysql", :version => "2.8.1"
   config.gem "nokogiri", :version => "1.4.1"
   config.gem "hpricot", :version => "0.8.2"
   config.gem "mechanize", :version => "0.9.2"
